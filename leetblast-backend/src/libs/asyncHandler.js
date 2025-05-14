@@ -5,6 +5,7 @@ function asyncHandler(requestHandler){
         .catch(function(err){
             next(err)
         })
+        
     }
 }
 

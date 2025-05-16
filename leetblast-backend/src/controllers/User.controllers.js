@@ -27,6 +27,7 @@ const registerUser = asyncHandler(async(req, res)=>{
             password: hashedPassword
         }
     })
+    
     res.status(201).json(new ApiResponse(201,user,"User created successfully"));
 })
 

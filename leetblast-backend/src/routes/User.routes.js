@@ -1,8 +1,11 @@
 import express from 'express'
-import { userRegistrationValidator } from '../validator'
-import { validate } from '../middlewares/validator.middlewre'
+import { userRegistrationValidator } from '../validator/index.js'
+import  {validate}  from '../middlewares/validator.middleware.js'
+import { registerUser } from '../controllers/User.controllers.js'
 
-const authRoutes = express.Router()
+const UserRoutes = express.Router()
 
-authRoutes.route('/register').post(userRegistrationValidator(),validate)
-authRoutes.route('/login')
+UserRoutes.post('/register',userRegistrationValidator(),validate,registerUser)
+// UserRoutes.post('/login')
+
+export default UserRoutes

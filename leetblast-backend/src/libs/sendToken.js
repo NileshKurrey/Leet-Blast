@@ -1,6 +1,7 @@
 import jwt from 'jsonwebtoken'
-
+import { ApiResponse } from './api-response.js';
 function SendToken(user, statusCode, res) {
+    console.log(user.name)
   const cookieOptions = {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
@@ -11,16 +12,13 @@ function SendToken(user, statusCode, res) {
     expiresIn: "24h",
   })
   res.cookie("token", token, cookieOptions);
-  res.status(statusCode).json({
-    success: true,
-    message: "Login successful",
-    token,
-    user: {
+  const response = new ApiResponse(200,{
       id: user._id,
       name: user.name,
       role: user.role,
-    },
-  })
+      image: user.image
+  },"Token sent successfully")
+  res.status(statusCode).json({token ,response});
 }
 
 export default SendToken;

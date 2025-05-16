@@ -1,11 +1,11 @@
 import express from 'express'
-import { userRegistrationValidator } from '../validator/index.js'
+import { userLoginValidator, userRegistrationValidator } from '../validator/index.js'
 import  {validate}  from '../middlewares/validator.middleware.js'
-import { registerUser } from '../controllers/User.controllers.js'
+import { login, registerUser } from '../controllers/User.controllers.js'
 
 const UserRoutes = express.Router()
 
 UserRoutes.post('/register',userRegistrationValidator(),validate, registerUser)
-// UserRoutes.post('/login')
+UserRoutes.post('/login',userLoginValidator(),validate,login)
 
 export default UserRoutes

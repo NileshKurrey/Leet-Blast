@@ -3,6 +3,7 @@ import { ApiResponse } from "../libs/api-response.js";
 import { asyncHandler } from "../libs/asyncHandler.js";
 import { db } from "../libs/db.js";
 import bcrypt from 'bcrypt'
+import SendToken from "../libs/sendToken.js";
 
 const registerUser = asyncHandler(async(req, res)=>{
     //Intilally I will create only user registration and logged in leter on I will add a feature for email send
@@ -27,8 +28,22 @@ const registerUser = asyncHandler(async(req, res)=>{
             password: hashedPassword
         }
     })
-    
+
     res.status(201).json(new ApiResponse(201,user,"User created successfully"));
 })
 
-export {registerUser}
+const login = asyncHandler(async(req, res)=>{
+    const {email} = req.body
+    const user = await db.user.findUnique({
+        where: {
+            email:email
+        }
+    })
+    if(!user){
+        res.status(400).json(new ApiResponse(400,"User not found"));
+        throw new ApiError(400, "User not found",);
+    }
+    
+    SendToken(user,200,res)
+})
+export {registerUser,login}

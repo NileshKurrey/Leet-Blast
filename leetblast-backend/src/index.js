@@ -20,10 +20,8 @@ app.use(cookieParer())
 
 
 //Routes
-app.get('/',(req,res)=>{
-    res.send('hello')
-})
-app.use('/api/v1/user', UserRoutes);
+
+app.use("/api/v1/user",UserRoutes)
 const Port = process.env.PORT ;
 app.listen(Port, () => {
     console.log(`Server is running on port ${Port}`);

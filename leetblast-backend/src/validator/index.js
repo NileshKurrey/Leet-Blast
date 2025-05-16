@@ -16,6 +16,7 @@ const userRegistrationValidator = () => {
       .notEmpty().withMessage("Name is required")
       .isLength({ min: 2 }).withMessage("Name should be at least 2 characters")
       .isLength({ max: 13 }).withMessage("Name cannot exceed 13 characters"),
+     
   ];
 };
 const userLoginValidator = () => {

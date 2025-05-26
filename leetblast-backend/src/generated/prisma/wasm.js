@@ -128,7 +128,15 @@ exports.Prisma.UserScalarFieldEnum = {
   role: 'role',
   password: 'password',
   createdAt: 'createdAt',
-  updatedAt: 'updatedAt'
+  updatedAt: 'updatedAt',
+  isVerified: 'isVerified',
+  verificationToken: 'verificationToken',
+  verificationTokenExpiry: 'verificationTokenExpiry',
+  forgotPasswordToken: 'forgotPasswordToken',
+  forgotPasswordTokenExpiry: 'forgotPasswordTokenExpiry',
+  forgotPasswordEmailisVerified: 'forgotPasswordEmailisVerified',
+  refreshToken: 'refreshToken',
+  refreshTokenExpiry: 'refreshTokenExpiry'
 };
 
 exports.Prisma.SortOrder = {

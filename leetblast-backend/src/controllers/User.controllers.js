@@ -5,8 +5,9 @@ import { db } from "../libs/db.js";
 import bcrypt from 'bcrypt'
 import SendToken from "../libs/sendToken.js";
 
+//register User
 const registerUser = asyncHandler(async(req, res)=>{
-    //Intilally I will create only user registration and logged in leter on I will add a feature for email send
+   
     const { name,email,image, password } = req.body
     const existingUser = await db.user.findUnique({
         where: {
@@ -31,9 +32,10 @@ const registerUser = asyncHandler(async(req, res)=>{
 
     res.status(201).json(new ApiResponse(201,user,"User created successfully"));
 })
-
+//verify User
+//login user
 const login = asyncHandler(async(req, res)=>{
-    const {email} = req.body
+    const {email,password} = req.body
     const user = await db.user.findUnique({
         where: {
             email:email
@@ -43,7 +45,30 @@ const login = asyncHandler(async(req, res)=>{
         res.status(400).json(new ApiResponse(400,"User not found"));
         throw new ApiError(400, "User not found",);
     }
-    
+    const isPasswordCorrect = await bcrypt.compare(password,user.password)
+    if(!isPasswordCorrect){
+        res.status(400).json(new ApiResponse(400,"Password is incorrect"));
+        throw new ApiError(400, "Password is incorrect",);
+    }
     SendToken(user,200,res)
 })
 export {registerUser,login}
+
+//forget Password
+
+//reset Password
+
+
+//update Profile
+
+
+//resend verification email
+
+//delete account
+//Admin Controllers
+
+//get all users
+//get user by id
+//update user by id
+//make user admin
+//delete user by id

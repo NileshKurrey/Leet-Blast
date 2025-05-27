@@ -416,8 +416,8 @@ export const resetPassword = asyncHandler(async (req, res) => {
 export const getUser = asyncHandler(async (req, res) => {
   const user = req.user;
   res.status(200).json(
-    new ApiResponse(200, "User Authentication Successfully!", {
-      user: {
+    new ApiResponse(200, {
+      
         id: user.id,
         firstname: user.firstname,
         lastname: user.lastname,
@@ -425,12 +425,25 @@ export const getUser = asyncHandler(async (req, res) => {
         email: user.email,
         role: user.role,
         image: user.image,
-      },
-    }),
+     
+    },"Successfully fetched User Profile!"),
   );
 });
 //update Profile
+export const UpdateProfile = asyncHandler(async (req, res) => {
 
+  const { name, email, image } = req.body;
+  const user = req.user;
+  await db.user.update({
+    where: { id: user.id },
+    data: {
+      name,
+      email,
+      image,
+    },
+  });
+  res.status(200).json(new ApiResponse(200,'', "Profile updated successfully!"));
+})
 //logout
 export const logout = asyncHandler(async (req, res) => {
   const refreshToken = req.cookies.refreshToken;
@@ -474,6 +487,27 @@ export const logout = asyncHandler(async (req, res) => {
 });
 
 //delete account
+export const deleteProfile = asyncHandler(async (req, res) => {
+  const user = req.user;
+  if(!user){
+    return res.status(401).json(new ApiError(401,'',"User not found"));
+  }
+  await db.user.delete({
+    where: { id: user.id },
+  });
+   res.clearCookie("accessToken", {
+    httpOnly: true,
+    sameSite: "strict",
+    secure: process.env.NODE_ENV !== "development",
+  });
+  res.clearCookie("refreshToken", {
+    httpOnly: true,
+    sameSite: "strict",
+    secure: process.env.NODE_ENV !== "development",
+  });
+  res.status(200).json(new ApiResponse(200,'', "Profile deleted successfully!"));
+   
+})
 //Admin Controllers -- Controlled by admin whose roles are admin
 
 //get all users

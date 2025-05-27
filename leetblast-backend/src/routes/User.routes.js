@@ -1,7 +1,7 @@
 import express from 'express'
 import { PasswordChangeValidator, userLoginValidator, userRegistrationValidator } from '../validator/index.js'
 import  {validate}  from '../middlewares/validator.middleware.js'
-import { forgotPassword, getUser, login, logout, refreshAccessToken, registerUser, resendVerficationToken, resetPassword, verifyUser, verifyYourEmailForNewPassword } from '../controllers/User.controllers.js'
+import { deleteProfile, forgotPassword, getUser, login, logout, refreshAccessToken, registerUser, resendVerficationToken, resetPassword, UpdateProfile, verifyUser, verifyYourEmailForNewPassword } from '../controllers/User.controllers.js'
 import { isUserLoggedIn } from '../middlewares/UserValidator.middleware.js'
 
 
@@ -17,6 +17,8 @@ UserRoutes.post('/logout',isUserLoggedIn, logout)
 UserRoutes.post('/forgetPassword', forgotPassword)
 UserRoutes.put('/resetPassword/:forgotPasswordToken',isUserLoggedIn,PasswordChangeValidator(),validate, resetPassword)
 UserRoutes.get('/forgot-password-verification/:forgotPasswordToken', verifyYourEmailForNewPassword)
-UserRoutes.get('/getUserProfile',isUserLoggedIn  ,getUser)
+UserRoutes.get('/getUserProfile',isUserLoggedIn ,getUser)
+UserRoutes.put('/UpdateUserProfile',isUserLoggedIn ,UpdateProfile)
+UserRoutes.delete('/deleteUserProfile',isUserLoggedIn ,deleteProfile)
 
 export default UserRoutes

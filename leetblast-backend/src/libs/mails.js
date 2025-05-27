@@ -79,6 +79,7 @@ const forgotPasswordVerificationMailGenContent = (name, passwordResetUrl) => {
       outro:
         "Need help, or have questions? Just reply to this email, we'd love to help.",
     },
+    
   };
 };
 

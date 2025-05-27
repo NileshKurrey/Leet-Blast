@@ -15,7 +15,7 @@ const userRegistrationValidator = () => {
       .trim()
       .notEmpty().withMessage("Name is required")
       .isLength({ min: 2 }).withMessage("Name should be at least 2 characters")
-      .isLength({ max: 13 }).withMessage("Name cannot exceed 13 characters"),
+      .isLength({ max: 25 }).withMessage("Name cannot exceed 13 characters"),
      
   ];
 };
@@ -25,5 +25,17 @@ const userLoginValidator = () => {
     body("password").notEmpty().withMessage("Password cannot be empty"),
   ];
 };
+const PasswordChangeValidator = () => {
+    return [
+        body('password')
+        .trim()
+        .notEmpty().withMessage("Password is required")
+        .isLength({min:3}).withMessage("Password should be at least 6 characters"),
 
-export { userRegistrationValidator, userLoginValidator };
+        body('confirmPassword')
+        .trim()
+        .notEmpty().withMessage("Password is required")
+        .isLength({min:3}).withMessage("Password should be at least 6 characters")
+    ]
+}
+export { userRegistrationValidator, userLoginValidator, PasswordChangeValidator };

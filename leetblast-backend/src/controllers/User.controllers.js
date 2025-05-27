@@ -4,8 +4,9 @@ import { asyncHandler } from "../libs/asyncHandler.js";
 import { db } from "../libs/db.js";
 import bcrypt from 'bcrypt'
 import { genAccessToken, genRefreshToken, genTempToken  } from "../libs/Tokens.js";
-import { emailVerificationMailGenContent, sendMail } from "../libs/mails.js";
+import { emailVerificationMailGenContent, forgotPasswordVerificationMailGenContent, sendMail } from "../libs/mails.js";
 import crypto from 'crypto'
+
 //register User
 export const registerUser = asyncHandler(async(req, res)=>{
    
@@ -54,8 +55,6 @@ export const registerUser = asyncHandler(async(req, res)=>{
           image: user.image,}},"User created successfully"));
 })
 //verify User
-
-
 export const verifyUser = asyncHandler(async (req, res) => {
   const { token } = req.params;
   if (!token) {
@@ -93,7 +92,7 @@ export const verifyUser = asyncHandler(async (req, res) => {
       verificationTokenExpiry: null,
     },
   });
-  return res.redirect("http://localhost:5173/signin");
+  return res.redirect("http://localhost:5173/sign-in");
 });
 //resend Verfication token
 export const resendVerficationToken = asyncHandler(async (req, res) => {
@@ -245,16 +244,237 @@ export const refreshAccessToken = asyncHandler(async (req, res) => {
 });
 
 //forget Password
+export const forgotPassword = asyncHandler(async (req, res) => {
+  const { email } = req.body;
+  if (!email) {
+    console.log("All files Are Required!");
+    return res.status(400).json(new ApiError(400, "All files Are Required!"));
+  }
+
+  const user = await db.user.findUnique({
+    where: { email },
+  });
+  if (!user) {
+    console.log("Invalid credentials!");
+    return res.status(401).json(new ApiError(401, "Invalid credentials!"));
+  }
+
+  const { unHashedToken, hashedToken, tokenExpiry } =
+    await genTempToken();
+
+  
+  await db.user.update({
+    where: { id: user.id },
+    data: {
+      forgotPasswordEmailisVerified: false,
+      forgotPasswordToken: hashedToken,
+      forgotPasswordTokenExpiry: new Date(tokenExpiry),
+    },
+  });
+
+  const verificationUrl = process.env.URL + `api/v1/user/forgot-password-verification/${unHashedToken}`;
+  const mailGenContent = forgotPasswordVerificationMailGenContent(
+    user.name,
+    verificationUrl,
+  );
+  await sendMail({
+    email: user.email,
+    subject: "Reset your password",
+    mailGenContent,
+  });
+
+  res.status(200).json(
+    new ApiResponse(
+      200,
+      "Forgot Password verification email sent successfully in your e-mail address!",
+      {
+        user: {
+          forgotPasswordToken:unHashedToken,
+          id: user.id,
+          name: user.name,
+          email: user.email,
+          role: user.role,
+          image: user.image,
+        },
+      },
+    ),
+  );
+});
+
+//Veryfy forgot password email
+export const verifyYourEmailForNewPassword = asyncHandler(
+  async (req, res) => {
+    const { forgotPasswordToken } = req.params;
+    if (!forgotPasswordToken) {
+      console.log("ForgotPasswordToken is required!");
+      return res
+        .status(401)
+        .json(new ApiError(401, "ForgotPasswordToken is required!"));
+    }
+
+    const hashedToken = await crypto
+      .createHash("sha256")
+      .update(forgotPasswordToken)
+      .digest("hex");
+
+    const user = await db.user.findFirst({
+      where: { forgotPasswordToken: hashedToken },
+    });
+    if (!user) {
+      console.log("ForgotPasswordToken is invalid!");
+      return res
+        .status(401)
+        .json(new ApiError(401, "ForgotPasswordToken is invalide!"));
+    }
+    const ERROR_MESSAGES = {
+      USER_ALREADY_VERIFIED: "User already verified!",
+      TOKEN_EXPIRED: "Token expired, please request a new one.",
+    };
+    if (
+      !user.forgotPasswordTokenExpiry ||
+      user.forgotPasswordTokenExpiry < new Date()
+    ) {
+      console.log("Token Expired or missing expiry field!");
+      return res
+        .status(401)
+        .json(new ApiError(401, ERROR_MESSAGES.TOKEN_EXPIRED));
+    }
+
+    await db.user.update({
+      where: { id: user.id },
+      data: {
+        forgotPasswordEmailisVerified: true,
+      },
+    });
+    res.redirect(`http://localhost:5173/change-password?token=${forgotPasswordToken}`);
+
+  },
+);
 
 //reset Password
+export const resetPassword = asyncHandler(async (req, res) => {
 
-//get Profile
+  const {password, confirmPassword } = req.body;
+
+  if (!password || !confirmPassword) {
+    console.log("All fields are required!");
+    return res.status(400).json(new ApiError(400, "All fields are required!"));
+  }
+
+  if (password !== confirmPassword) {
+    
+    return res
+      .status(400)
+      .json(new ApiError(400, "Both Password should be same!"));
+  }
+
+  const { forgotPasswordToken } = req.params;
+  if (!forgotPasswordToken) {
+    return res.status(401).json(new ApiResponse(401, "Token is required!"));
+  }
+
+  const hashedToken = crypto
+    .createHash("sha256")
+    .update(forgotPasswordToken)
+    .digest("hex");
+
+  const user = await db.user.findFirst({
+    where: {
+      forgotPasswordToken: hashedToken,
+      forgotPasswordTokenExpiry: {
+        gt: new Date(),
+      },
+    },
+  });
+  if (!user) {
+    return res
+      .status(401)
+      .json(new ApiResponse(401, "Invalid or expired token"));
+  }
+  
+  if (!user.forgotPasswordEmailisVerified) {
+    return res
+      .status(403)
+      .json(new ApiResponse(403, "Please verify your email first!"));
+  }
+
+  const hashedPassword = await bcrypt.hash(password, 10);
+  await db.user.update({
+    where: { id: user.id },
+    data: {
+      forgotPasswordToken: null,
+      forgotPasswordTokenExpiry: null,
+      password: hashedPassword,
+      forgotPasswordEmailisVerified: false,
+    },
+  });
+
+  return res.status(200).json(
+  new ApiResponse(200, "Password changed successfully"));
+});
+//get User Profile
+export const getUser = asyncHandler(async (req, res) => {
+  const user = req.user;
+  res.status(200).json(
+    new ApiResponse(200, "User Authentication Successfully!", {
+      user: {
+        id: user.id,
+        firstname: user.firstname,
+        lastname: user.lastname,
+        username: user.username,
+        email: user.email,
+        role: user.role,
+        image: user.image,
+      },
+    }),
+  );
+});
 //update Profile
 
 //logout
+export const logout = asyncHandler(async (req, res) => {
+  const refreshToken = req.cookies.refreshToken;
+  if (!refreshToken) {
+    return res.status(401).json(new ApiError(401, "Refresh token missing"));
+  }
+
+  const user = await db.user.findFirst({
+    where: { refreshToken },
+  });
+  if (
+    !user ||
+    !user.refreshTokenExpiry ||
+    user.refreshTokenExpiry < new Date()
+  ) {
+    return res
+      .status(401)
+      .json(new ApiError(401, "Refresh token expired or invalid"));
+  }
+
+  await db.user.update({
+    where: { id: user.id },
+    data: {
+      refreshToken: null,
+      refreshTokenExpiry: null,
+    },
+  });
+
+  res.clearCookie("accessToken", {
+    httpOnly: true,
+    sameSite: "strict",
+    secure: process.env.NODE_ENV !== "development",
+  });
+  res.clearCookie("refreshToken", {
+    httpOnly: true,
+    sameSite: "strict",
+    secure: process.env.NODE_ENV !== "development",
+  });
+
+  res.status(200).json(new ApiResponse(200, "User Logout Successfully!"));
+});
 
 //delete account
-//Admin Controllers
+//Admin Controllers -- Controlled by admin whose roles are admin
 
 //get all users
 //get user by id

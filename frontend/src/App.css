@@ -1,0 +1,47 @@
+@import "tailwindcss";
+@plugin "daisyui";
+
+@plugin "daisyui" {
+  themes: all;
+  themes: forest --default, night --prefersdark;
+
+}
+
+@plugin "daisyui/theme" {
+  name: "forest";
+   default: true;
+  --color-primary:rgb(38, 217, 127);
+  --color-secondary: rgb(95, 219, 227);
+  --color-accent: rgb(0, 255, 179);
+  --color-neutral-content: rgb(245, 245, 245)
+}
+@keyframes ultraGradientFlow {
+  0% {
+    background-position: 0% 50%;
+  }
+  25% {
+    background-position: 50% 100%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  75% {
+    background-position: 50% 0%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+.bg-ultra-gradient {
+  background: linear-gradient(
+    130deg,
+    #454648,
+    #141414,
+    #26d97f24,
+    #00ffb328,
+    #121212
+  );
+  background-size: 800% 800%;
+  animation: ultraGradientFlow 20s ease-in-out infinite;
+}
